@@ -1,0 +1,10 @@
+[package]
+name = "prataut-backend"
+version = "0.1.0"
+authors = ["Isak Johansson <isak@k22.se>"]
+edition = "2018"
+
+[dependencies]
+ws = "0.9.1"
+rocket = "0.4.4"
+uuid = { version = "0.8", features = ["serde", "v4"] }
