@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+	</head>
+	<body>
+      <pre id="messages"></pre>
+			<form id="form">
+				<input type="text" id="msg">
+				<input type="submit" value="Send">
+			</form>
+			<form id="update">
+				<input type="submit" value="Update">
+			</form>
+      <script>
+        //var socket = new WebSocket("ws://" + window.location.host + "/ws");
+        var socket = new WebSocket("ws://" + "127.0.0.1:8000" + "/ws");
+        socket.onmessage = function (event) {
+          var messages = document.getElementById("messages");
+          messages.append(event.data + "\n");
+        };
+        var update = document.getElementById("update");
+        update.addEventListener('submit', function (event) {
+          event.preventDefault();
+	  var req = {
+	      "type": "Poll",
+	    }
+          socket.send(JSON.stringify(req));
+        });
+
+        var form = document.getElementById("form");
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          var input = document.getElementById("msg");
+	  var req = {
+	      "type": "Send",
+	      "message": input.value
+	    }
+          socket.send(JSON.stringify(req));
+          //socket.send(input.value);
+          input.value = "";
+        });
+		</script>
+	</body>
+</html>
+

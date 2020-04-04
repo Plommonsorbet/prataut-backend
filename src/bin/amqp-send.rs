@@ -5,6 +5,15 @@ use futures::executor::LocalPool;
 //};
 //use log::info;
 use prataut_backend::sender;
+use std::io::{self, Read};
+fn grab_stdin() -> String {
+    let mut buffer = String::new();
+    let stdin = io::stdin();
+    let mut handle = stdin.lock();
+    handle.read_to_string(&mut buffer).expect("nooo"); // TODO REMOVE
+
+    buffer
+}
 
 fn main() {
     std::env::set_var("RUST_LOG", "info");
@@ -16,7 +25,7 @@ fn main() {
 
     let mut executor = LocalPool::new();
 
-    executor.run_until(sender(&addr, "This is my message from client."));
+    executor.run_until(sender(&addr, &grab_stdin()));
 }
 //async fn sender(addr: &str, payload: &str) {
 //    let conn = Connection::connect(&addr, ConnectionProperties::default())
