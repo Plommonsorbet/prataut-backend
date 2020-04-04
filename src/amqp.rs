@@ -199,3 +199,229 @@
 //        //}
 //    });
 //}
+
+
+//impl ConsumerDelegate for Subscriber {
+//    fn on_new_delivery(&self, delivery: DeliveryResult) {
+//        if let Ok(Some(delivery)) = delivery {
+//            self.channel
+//                .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+//                .wait()
+//                .expect("basic_ack");
+//        }
+//    }
+//}
+
+//pub fn listener() {
+
+    //let addr = std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
+    //let conn = Connection::connect(&addr, ConnectionProperties::default())
+    //    .wait()
+    //    .expect("connection error");
+
+    //info!("CONNECTED");
+
+    //let channel_a = conn.create_channel().wait().expect("create_channel");
+    ////let channel_b = conn.create_channel().wait().expect("create_channel");
+
+    //let queue = channel_a
+    //    .queue_declare(
+    //        "hello",
+    //        QueueDeclareOptions::default(),
+    //        FieldTable::default(),
+    //    )
+    //    .wait()
+    //    .expect("queue_declare");
+
+    ////info!("Declared queue {:?}", queue);
+
+    //info!("will consume");
+    //let consumer = channel_a
+    //    .clone()
+    //    .basic_consume(
+    //        "",
+    //        "hello",
+    //        BasicConsumeOptions::default(),
+    //        FieldTable::default(),
+    //    )
+    //    .wait()
+    //    .expect("basic_consume")
+    //    .set_delegate(Box::new(Subscriber {
+    //        channel: channel_a.clone(),
+    //    }));
+
+    //dbg!(subscriber);
+
+    //let payload = b"Hello world!";
+
+    //loop {
+    //    let confirm = channel_a
+    //        .basic_publish(
+    //            "",
+    //            "hello",
+    //            BasicPublishOptions::default(),
+    //            payload.to_vec(),
+    //            BasicProperties::default(),
+    //        )
+    //        .wait()
+    //        .expect("basic_publish")
+    //        .wait()
+    //        .expect("publisher-confirms");
+    //    assert_eq!(confirm, Confirmation::NotRequested);
+    //}
+//}
+
+
+
+// This can be read from a file
+//static INDEX_HTML: &'static [u8] = br#"
+//<!DOCTYPE html>
+//<html>
+//	<head>
+//		<meta charset="utf-8">
+//	</head>
+//	<body>
+//      <pre id="messages"></pre>
+//			<form id="form">
+//				<input type="text" id="msg">
+//				<input type="submit" value="Send">
+//			</form>
+//      <script>
+//        var socket = new WebSocket("ws://" + window.location.host + "/ws");
+//        socket.onmessage = function (event) {
+//          var messages = document.getElementById("messages");
+//          messages.append(event.data + "\n");
+//        };
+//        var form = document.getElementById("form");
+//        form.addEventListener('submit', function (event) {
+//          event.preventDefault();
+//          var input = document.getElementById("msg");
+//          socket.send(input.value);
+//          input.value = "";
+//        });
+//		</script>
+//	</body>
+//</html>
+//    "#;
+
+
+//pub fn sender() {
+//
+//    let addr = std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
+//    let conn = Connection::connect(&addr, ConnectionProperties::default())
+//        .wait()
+//        .expect("connection error");
+//
+//    info!("CONNECTED");
+//
+//    let channel_a = conn.create_channel().wait().expect("create_channel");
+//    ////let channel_b = conn.create_channel().wait().expect("create_channel");
+//
+//    //let queue = channel_a
+//    //    .queue_declare(
+//    //        "hello",
+//    //        QueueDeclareOptions::default(),
+//    //        FieldTable::default(),
+//    //    )
+//    //    .wait()
+//    //    .expect("queue_declare");
+//
+//    //info!("Declared queue {:?}", queue);
+//
+//    //info!("will consume");
+//    //channel_b
+//    //    .clone()
+//    //    .basic_consume(
+//    //        "hello",
+//    //        "my_consumer",
+//    //        BasicConsumeOptions::default(),
+//    //        FieldTable::default(),
+//    //    )
+//    //    .wait()
+//    //    .expect("basic_consume")
+//    //    .set_delegate(Box::new(Subscriber {
+//    //        channel: channel_b.clone(),
+//    //    }));
+//
+//    let payload = b"Hello world!";
+//    let confirm = channel_a
+//        .basic_publish(
+//            "",
+//            "hello",
+//            BasicPublishOptions::default(),
+//            payload.to_vec(),
+//            BasicProperties::default(),
+//        )
+//        .wait()
+//        .expect("basic_publish")
+//        .wait()
+//        .expect("publisher-confirms");
+//
+//    //loop {
+//    //    let confirm = channel_a
+//    //        .basic_publish(
+//    //            "",
+//    //            "hello",
+//    //            BasicPublishOptions::default(),
+//    //            payload.to_vec(),
+//    //            BasicProperties::default(),
+//    //        )
+//    //        .wait()
+//    //        .expect("basic_publish")
+//    //        .wait()
+//    //        .expect("publisher-confirms");
+//    //    assert_eq!(confirm, Confirmation::NotRequested);
+//    //}
+//}
+//
+//pub fn listener () {
+//    let mut executor = LocalPool::new();
+//        let addr = std::env::var("AMQP_ADDR")
+//            .unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
+//
+//    executor.run_until(async {
+//        let conn = Connection::connect(&addr, ConnectionProperties::default())
+//            .await
+//            .expect("connection error");
+//
+//        info!("CONNECTED");
+//
+//        //receive channel
+//        let channel = conn.create_channel().await.expect("create_channel");
+//        info!("[{}] state: {:?}", line!(), conn.status().state());
+//
+//        let queue = channel
+//            .queue_declare(
+//                "hello",
+//                QueueDeclareOptions::default(),
+//                FieldTable::default(),
+//            )
+//            .await
+//            .expect("queue_declare");
+//        info!("[{}] state: {:?}", line!(), conn.status().state());
+//        info!("declared queue {:?}", queue);
+//
+//        info!("will consume");
+//        let consumer = channel
+//            .basic_consume(
+//                "hello",
+//                "my_consumer",
+//                BasicConsumeOptions::default(),
+//                FieldTable::default(),
+//            )
+//            .await
+//            .expect("basic_consume");
+//        info!("[{}] state: {:?}", line!(), conn.status().state());
+//
+//        for delivery in consumer {
+//            info!("received message: {:?}", delivery);
+//            if let Ok(delivery) = delivery {
+//                channel
+//                    .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+//                    .await
+//                    .expect("basic_ack");
+//            }
+//        }
+//	info!("does it reach end");
+//    })
+//}

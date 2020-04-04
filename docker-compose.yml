@@ -1,31 +1,17 @@
-#version: '2'
-#
+version: '2'
+
 services:
   redis:
-    image: 'rabbitmq:latest'
+    image: 'bitnami/redis:5.0'
     environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     ports:
-      - '8080:8080'
-        #volumes:
-        #  - 'rabbitmq:/bitnami/redis/data'
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
 
-        #volumes:
-        #  redis_data:
-        #    driver: local
-        #
-version: '2'
-services:
-  rabbitmq:
-    container_name: some-rabbitmq
-    image: launcher.gcr.io/google/rabbitmq3
-    environment:
-      #"RABBITMQ_ERLANG_COOKIE": "unique-erlang-cookie"
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
-    ports:
-      - '4369:4369'
-      - '5671:5671'
-      - '5672:5672'
-      - '25672:25672'
+volumes:
+  redis_data:
+    driver: local
