@@ -1,20 +1,20 @@
 #version: '2'
 #
-#services:
-#  rabbitmq:
-#    image: 'rabbitmq:latest'
-#    environment:
-#      - RABBITMQ_DEFAULT_USER=user
-#      - RABBITMQ_DEFAULT_PASS=password
-#    ports:
-#      - '8080:8080'
-#        #volumes:
-#        #  - 'rabbitmq:/bitnami/redis/data'
-#
-#        #volumes:
-#        #  redis_data:
-#        #    driver: local
-#        #
+services:
+  redis:
+    image: 'rabbitmq:latest'
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    ports:
+      - '8080:8080'
+        #volumes:
+        #  - 'rabbitmq:/bitnami/redis/data'
+
+        #volumes:
+        #  redis_data:
+        #    driver: local
+        #
 version: '2'
 services:
   rabbitmq:

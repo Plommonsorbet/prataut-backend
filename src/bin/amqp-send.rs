@@ -25,7 +25,8 @@ fn main() {
 
     let mut executor = LocalPool::new();
 
-    executor.run_until(sender(&addr, &grab_stdin()));
+    //executor.run_until(sender(&addr, &grab_stdin()));
+    sender();
 }
 //async fn sender(addr: &str, payload: &str) {
 //    let conn = Connection::connect(&addr, ConnectionProperties::default())

@@ -1,8 +1,8 @@
 use futures::executor::LocalPool;
-use futures_util::{future::FutureExt, stream::StreamExt, task::LocalSpawnExt};
+use futures_util::{future::FutureExt, stream::StreamExt, task::LocalSpawnExt,};
 use lapin::{
     self, auth::Credentials, message::DeliveryResult, options::*, publisher_confirm::Confirmation,
-    types::FieldTable, BasicProperties, Connection, ConnectionProperties,
+    types::FieldTable, BasicProperties, Connection, ConnectionProperties, ConsumerDelegate, Channel
 };
 use log::{error, info};
 use serde::{Deserialize, Serialize};
@@ -14,37 +14,117 @@ use std::str;
 use std::{thread, time};
 use uuid::Uuid;
 use ws::{self, listen, Handler, Handshake, Message, Request, Response, Sender};
+use std::time::Duration;
+
+use async_std::task;
+
+#[derive(Clone, Debug)]
+struct Subscriber {
+    channel: Channel,
+}
+
+impl ConsumerDelegate for Subscriber {
+    fn on_new_delivery(&self, delivery: DeliveryResult) {
+        if let Ok(Some(delivery)) = delivery {
+            self.channel
+                .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+                .wait()
+                .expect("basic_ack");
+        }
+    }
+}
+
+//pub fn listener() {
+
+    //let addr = std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
+    //let conn = Connection::connect(&addr, ConnectionProperties::default())
+    //    .wait()
+    //    .expect("connection error");
+
+    //info!("CONNECTED");
+
+    //let channel_a = conn.create_channel().wait().expect("create_channel");
+    ////let channel_b = conn.create_channel().wait().expect("create_channel");
+
+    //let queue = channel_a
+    //    .queue_declare(
+    //        "hello",
+    //        QueueDeclareOptions::default(),
+    //        FieldTable::default(),
+    //    )
+    //    .wait()
+    //    .expect("queue_declare");
+
+    ////info!("Declared queue {:?}", queue);
+
+    //info!("will consume");
+    //let consumer = channel_a
+    //    .clone()
+    //    .basic_consume(
+    //        "",
+    //        "hello",
+    //        BasicConsumeOptions::default(),
+    //        FieldTable::default(),
+    //    )
+    //    .wait()
+    //    .expect("basic_consume")
+    //    .set_delegate(Box::new(Subscriber {
+    //        channel: channel_a.clone(),
+    //    }));
+
+    //dbg!(subscriber);
+
+    //let payload = b"Hello world!";
+
+    //loop {
+    //    let confirm = channel_a
+    //        .basic_publish(
+    //            "",
+    //            "hello",
+    //            BasicPublishOptions::default(),
+    //            payload.to_vec(),
+    //            BasicProperties::default(),
+    //        )
+    //        .wait()
+    //        .expect("basic_publish")
+    //        .wait()
+    //        .expect("publisher-confirms");
+    //    assert_eq!(confirm, Confirmation::NotRequested);
+    //}
+//}
+
+
 
 // This can be read from a file
-static INDEX_HTML: &'static [u8] = br#"
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-	</head>
-	<body>
-      <pre id="messages"></pre>
-			<form id="form">
-				<input type="text" id="msg">
-				<input type="submit" value="Send">
-			</form>
-      <script>
-        var socket = new WebSocket("ws://" + window.location.host + "/ws");
-        socket.onmessage = function (event) {
-          var messages = document.getElementById("messages");
-          messages.append(event.data + "\n");
-        };
-        var form = document.getElementById("form");
-        form.addEventListener('submit', function (event) {
-          event.preventDefault();
-          var input = document.getElementById("msg");
-          socket.send(input.value);
-          input.value = "";
-        });
-		</script>
-	</body>
-</html>
-    "#;
+//static INDEX_HTML: &'static [u8] = br#"
+//<!DOCTYPE html>
+//<html>
+//	<head>
+//		<meta charset="utf-8">
+//	</head>
+//	<body>
+//      <pre id="messages"></pre>
+//			<form id="form">
+//				<input type="text" id="msg">
+//				<input type="submit" value="Send">
+//			</form>
+//      <script>
+//        var socket = new WebSocket("ws://" + window.location.host + "/ws");
+//        socket.onmessage = function (event) {
+//          var messages = document.getElementById("messages");
+//          messages.append(event.data + "\n");
+//        };
+//        var form = document.getElementById("form");
+//        form.addEventListener('submit', function (event) {
+//          event.preventDefault();
+//          var input = document.getElementById("msg");
+//          socket.send(input.value);
+//          input.value = "";
+//        });
+//		</script>
+//	</body>
+//</html>
+//    "#;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
@@ -69,18 +149,21 @@ impl Handler for Server {
         let new_uuid = Uuid::new_v4();
         match req.resource() {
             // The default trait implementation
-            "/ws" => Response::from_request(req),
+            //"/ws" => Response::from_request(req),
 
             // Create a custom response
-            "/" => Ok(Response::new(200, "OK", fs::read("client.html").unwrap())),
+            //"/" => Ok(Response::new(200, "OK", fs::read("client.html").unwrap())),
 
-            _ => Ok(Response::new(404, "Not Found", b"404 - Not Found".to_vec())),
+            _ => Response::from_request(req),
+
+            //_ => Ok(Response::new(404, "Not Found", b"404 - Not Found".to_vec())),
         }
     }
     fn on_open(&mut self, handshake: Handshake) -> ws::Result<()> {
         self.count.set(self.count.get() + 1);
 
         let number_of_connection = self.count.get();
+	info!("{:?}", handshake.request);
 
         let open_message = format!(
             "{} entered and the number of live connections is {}",
@@ -127,6 +210,7 @@ impl Handler for Server {
                             x if x == 5 => {
                                 info!("conn_id: 5");
                                 self.out.send(Message::text("Message for conn_id: 5"));
+
                             }
                             _ => info!("conn id is higher than 5"),
                         };
@@ -217,4 +301,125 @@ impl Handler for Server {
         //    }
         //};
     }
+}
+
+pub fn sender() {
+
+    let addr = std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
+    let conn = Connection::connect(&addr, ConnectionProperties::default())
+        .wait()
+        .expect("connection error");
+
+    info!("CONNECTED");
+
+    let channel_a = conn.create_channel().wait().expect("create_channel");
+    ////let channel_b = conn.create_channel().wait().expect("create_channel");
+
+    //let queue = channel_a
+    //    .queue_declare(
+    //        "hello",
+    //        QueueDeclareOptions::default(),
+    //        FieldTable::default(),
+    //    )
+    //    .wait()
+    //    .expect("queue_declare");
+
+    //info!("Declared queue {:?}", queue);
+
+    //info!("will consume");
+    //channel_b
+    //    .clone()
+    //    .basic_consume(
+    //        "hello",
+    //        "my_consumer",
+    //        BasicConsumeOptions::default(),
+    //        FieldTable::default(),
+    //    )
+    //    .wait()
+    //    .expect("basic_consume")
+    //    .set_delegate(Box::new(Subscriber {
+    //        channel: channel_b.clone(),
+    //    }));
+
+    let payload = b"Hello world!";
+    let confirm = channel_a
+        .basic_publish(
+            "",
+            "hello",
+            BasicPublishOptions::default(),
+            payload.to_vec(),
+            BasicProperties::default(),
+        )
+        .wait()
+        .expect("basic_publish")
+        .wait()
+        .expect("publisher-confirms");
+
+    //loop {
+    //    let confirm = channel_a
+    //        .basic_publish(
+    //            "",
+    //            "hello",
+    //            BasicPublishOptions::default(),
+    //            payload.to_vec(),
+    //            BasicProperties::default(),
+    //        )
+    //        .wait()
+    //        .expect("basic_publish")
+    //        .wait()
+    //        .expect("publisher-confirms");
+    //    assert_eq!(confirm, Confirmation::NotRequested);
+    //}
+}
+
+pub fn listener () {
+    let mut executor = LocalPool::new();
+        let addr = std::env::var("AMQP_ADDR")
+            .unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
+
+    executor.run_until(async {
+        let conn = Connection::connect(&addr, ConnectionProperties::default())
+            .await
+            .expect("connection error");
+
+        info!("CONNECTED");
+
+        //receive channel
+        let channel = conn.create_channel().await.expect("create_channel");
+        info!("[{}] state: {:?}", line!(), conn.status().state());
+
+        let queue = channel
+            .queue_declare(
+                "hello",
+                QueueDeclareOptions::default(),
+                FieldTable::default(),
+            )
+            .await
+            .expect("queue_declare");
+        info!("[{}] state: {:?}", line!(), conn.status().state());
+        info!("declared queue {:?}", queue);
+
+        info!("will consume");
+        let consumer = channel
+            .basic_consume(
+                "hello",
+                "my_consumer",
+                BasicConsumeOptions::default(),
+                FieldTable::default(),
+            )
+            .await
+            .expect("basic_consume");
+        info!("[{}] state: {:?}", line!(), conn.status().state());
+
+        for delivery in consumer {
+            info!("received message: {:?}", delivery);
+            if let Ok(delivery) = delivery {
+                channel
+                    .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+                    .await
+                    .expect("basic_ack");
+            }
+        }
+	info!("does it reach end");
+    })
 }

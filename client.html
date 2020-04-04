@@ -14,7 +14,7 @@
 			</form>
       <script>
         //var socket = new WebSocket("ws://" + window.location.host + "/ws");
-        var socket = new WebSocket("ws://" + "127.0.0.1:8000" + "/ws");
+        var socket = new WebSocket("ws://" + "127.0.0.1:8000" + "/ws/test");
         socket.onmessage = function (event) {
           var messages = document.getElementById("messages");
           messages.append(event.data + "\n");

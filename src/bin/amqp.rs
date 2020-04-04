@@ -13,7 +13,8 @@ fn main() {
     let mut executor = LocalPool::new();
 
     let addr = std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://user:password@127.0.0.1:5672/%2f".into());
-    executor.run_until(listener(addr.to_string()));
+    listener();
+    //executor.run_until(listener(addr.to_string()));
 }
 
 //async fn listener(addr: String) {
