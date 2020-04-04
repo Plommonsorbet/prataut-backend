@@ -1,0 +1,8 @@
+#!/bin/python3
+import time
+import sys
+
+cur_time = int(time.time())
+print(cur_time + int(sys.argv[1]))
+
+#python -c "import time; import sys; print(str(int(time.time()) + int(str(sys.argv[0]))))"
