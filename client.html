@@ -9,12 +9,24 @@
 				<input type="text" id="msg">
 				<input type="submit" value="Send">
 			</form>
-      <input type="submit" value="lyssna!", id="queue_listener">
-      <input type="submit" value="prata!",  id="queue_venter">
+	
+      <form id="queue_listener">
+      <input type="submit" value="lyssna!">
+      </form>
+      <form id="queue_venter">
+      <input type="submit" value="prata!">
+      </form>
+
 
       <script>
+	function uuidv4() {
+	    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+		return v.toString(16);
+	    });
+	}
 
-        var socket = new WebSocket("ws://" + "127.0.0.1:8000" + "/ws");
+        var socket = new WebSocket("ws://" + "127.0.0.1:8000" + "/ws/" + uuidv4());
         socket.onmessage = function (event) {
           var messages = document.getElementById("messages");
           messages.append(event.data + "\n");
@@ -24,16 +36,27 @@
         form.addEventListener('submit', function (event) {
           event.preventDefault();
           var input = document.getElementById("msg");
-          socket.send(input.value);
+	  var obj = {"type": "Message", "msg": input.value}
+          socket.send(JSON.stringify(obj));
           input.value = "";
         });
 
         var queue_listener = document.getElementById("queue_listener");
-        form.addEventListener('submit', function (event) {
+        queue_listener.addEventListener('submit', function (event) {
           event.preventDefault();
           //var input = document.getElementById("msg");
-          //socket.send({{}});
-          input.value = "";
+	    var obj = {"type": "Queue", "queue_type": "Listener"}
+            socket.send(JSON.stringify(obj));
+        });
+
+        var queue_venter = document.getElementById("queue_venter");
+        queue_venter.addEventListener('submit', function (event) {
+          event.preventDefault();
+          //var input = document.getElementById("msg");
+
+	    var obj = {"type": "Queue", "queue_type": "Venter"}
+	    //var obj = {"type": "Venter"}
+            socket.send(JSON.stringify(obj));
         });
 		</script>
 	</body>

@@ -4,6 +4,7 @@ extern crate ws;
 use prataut_backend::{Server};
 use std::cell::Cell;
 use std::rc::Rc;
+use redis;
 
 use ws::{listen, Handler, Handshake, Message, Request, Response, Result, Sender};
 //use std::{thread, time};
